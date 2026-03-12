@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Get it Supplies Limited — You need it, we have it</title>
   <meta name="description" content="Your trusted crop protection partner in Kenya. Fertilizers, pesticides, herbicides and expert agronomic advice.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231B4332'/><text y='.9em' font-size='80' x='10'>🌿</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -597,6 +598,20 @@
     .full-col { grid-column: 1 / -1; }
     .emoji-img { font-size: 60px; display: flex; align-items: center; justify-content: center; }
 
+
+    /* ── GITHUB SYNC ── */
+    .sync-status { display:flex; align-items:center; gap:8px; font-size:13px; padding:10px 16px; border-radius:10px; margin-bottom:16px; }
+    .sync-status.idle { background:rgba(0,0,0,0.04); color:var(--muted); }
+    .sync-status.saving { background:rgba(244,162,97,0.15); color:#c05c10; }
+    .sync-status.success { background:rgba(82,183,136,0.15); color:var(--leaf); }
+    .sync-status.error { background:#fee2e2; color:#dc2626; }
+    .sync-dot { width:8px; height:8px; border-radius:50%; background:currentColor; flex-shrink:0; }
+    .sync-dot.pulse { animation:pulse 1s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .gh-setup-banner { background:rgba(244,162,97,0.12); border:1px solid rgba(244,162,97,0.3); border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:13px; color:#7a3e05; line-height:1.7; }
+    .gh-setup-banner strong { display:block; margin-bottom:6px; color:#5a2e00; font-size:14px; }
+    .gh-setup-banner code { background:rgba(0,0,0,0.08); padding:2px 6px; border-radius:4px; font-family:monospace; font-size:12px; }
+
     /* ── BOTTOM MOBILE NAV ── */
     .bottom-nav {
       display: none;
@@ -1050,6 +1065,8 @@
         <button class="admin-tab active" onclick="switchTab('products')">Products</button>
         <button class="admin-tab" onclick="switchTab('categories')">Categories</button>
         <button class="admin-tab" onclick="switchTab('settings')">Site Settings</button>
+        <button class="admin-tab" onclick="switchTab('github')">GitHub Sync</button>
+        <button class="admin-tab" onclick="switchTab('credentials')">Credentials</button>
       </div>
 
       <!-- PRODUCTS TAB -->
@@ -1167,6 +1184,83 @@
         </div>
       </div>
 
+      <!-- GITHUB SYNC TAB -->
+      <div class="admin-section" id="tab-github">
+        <div class="admin-card">
+          <h3>GitHub Sync Setup</h3>
+          <div class="gh-setup-banner">
+            <strong>How this works</strong>
+            When you save products or settings, the data is committed directly to your GitHub repo as <code>data.json</code>. The site reads this file on load — so all visitors see your latest content instantly.<br><br>
+            <strong>Setup steps:</strong><br>
+            1. Go to <code>github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens</code><br>
+            2. Create a token with <code>Contents: Read and Write</code> permission for this repo<br>
+            3. Paste the token, repo owner and repo name below and click Save
+          </div>
+          <div class="admin-form single">
+            <div class="admin-field">
+              <label>GitHub Personal Access Token</label>
+              <input type="password" id="gh-token" placeholder="github_pat_xxxx..." />
+            </div>
+            <div class="admin-field">
+              <label>Repository Owner (GitHub username or org)</label>
+              <input type="text" id="gh-owner" placeholder="e.g. getitsupplies" />
+            </div>
+            <div class="admin-field">
+              <label>Repository Name</label>
+              <input type="text" id="gh-repo" placeholder="e.g. getitsupplies.github.io" />
+            </div>
+            <div class="admin-field">
+              <label>Branch</label>
+              <input type="text" id="gh-branch" placeholder="main" value="main" />
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <button class="admin-btn admin-btn-primary" onclick="saveGithubConfig()">Save GitHub Config</button>
+              <button class="admin-btn admin-btn-edit" onclick="testGithubConnection()">Test Connection</button>
+              <button class="admin-btn admin-btn-primary" onclick="pushToGithub()" style="background:var(--lime);color:var(--forest);">Push Data to GitHub Now</button>
+            </div>
+            <div class="sync-status idle" id="gh-status">
+              <span class="sync-dot"></span>
+              <span id="gh-status-text">Not configured. Fill in details above.</span>
+            </div>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3>Sync Log</h3>
+          <div id="sync-log" style="font-family:monospace; font-size:12px; color:var(--muted); line-height:1.8; max-height:200px; overflow-y:auto; background:var(--cream); padding:16px; border-radius:10px;">
+            No syncs yet this session.
+          </div>
+        </div>
+      </div>
+
+      <!-- CREDENTIALS TAB -->
+      <div class="admin-section" id="tab-credentials">
+        <div class="admin-card">
+          <h3>Change Login Credentials</h3>
+          <div class="admin-form single">
+            <div class="admin-field">
+              <label>Current Password</label>
+              <input type="password" id="cred-current" placeholder="Enter current password" />
+            </div>
+            <div class="admin-field">
+              <label>New Username</label>
+              <input type="text" id="cred-user" placeholder="New username" />
+            </div>
+            <div class="admin-field">
+              <label>New Password</label>
+              <input type="password" id="cred-new" placeholder="New password (min 8 chars)" />
+            </div>
+            <div class="admin-field">
+              <label>Confirm New Password</label>
+              <input type="password" id="cred-confirm" placeholder="Repeat new password" />
+            </div>
+            <div>
+              <button class="admin-btn admin-btn-primary" onclick="changeCredentials()">Update Credentials</button>
+              <div class="admin-msg" id="cred-msg" style="display:none; margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /admin-body -->
   </div><!-- /admin-main-view -->
 </div><!-- /admin-panel -->
@@ -1198,22 +1292,35 @@
 </nav>
 
 <script>
-
 // ══════════════════════════════════════════
-// DATA STORE (localStorage-backed)
+// CONFIG
 // ══════════════════════════════════════════
 const STORAGE_KEY = 'gis_data_v1';
+const CRED_KEY    = 'gis_creds_v1';
+const GH_KEY      = 'gis_github_v1';
 
+// ── Credentials ──
+function getCreds() {
+  try { const r = localStorage.getItem(CRED_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { username: 'admin', password: 'getit2026' };
+}
+function saveCreds(obj) { localStorage.setItem(CRED_KEY, JSON.stringify(obj)); }
+
+// ── GitHub config ──
+function getGHConfig() {
+  try { const r = localStorage.getItem(GH_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { token:'', owner:'', repo:'', branch:'main' };
+}
+function saveGHConfig(obj) { localStorage.setItem(GH_KEY, JSON.stringify(obj)); }
+
+// ── Data store ──
 function getStore() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
   return getDefaultData();
 }
-
 function saveStore(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  autoSync(data);
 }
 
 function getDefaultData() {
@@ -1227,12 +1334,12 @@ function getDefaultData() {
       { id: 'c6', name: 'Post-Harvest & Other Essentials', emoji: '📦', desc: 'Seedling trays, post-harvest solutions, plant disinfectants and veterinary medicine.' },
     ],
     products: [
-      { id: 'p1', name: 'Spidor Max 300SC', category: 'c1', desc: 'Powerful acaricide-insecticide for mite and whitefly control in avocados, tomatoes and more.', ingredient: 'Spirodiclofen + Abamectin', rate: '10ml / 20L water', emoji: '🧪', crop: 'Avocado, Tomatoes' },
-      { id: 'p2', name: 'Agripest 75 EC Organic', category: 'c5', desc: 'Broad-spectrum biopesticide using refined croton megalo oil. Safe for the environment.', ingredient: 'Croton Megalo Oil', rate: '3ml / 1L water', emoji: '🌿', crop: 'All crops' },
-      { id: 'p3', name: 'Protec K', category: 'c1', desc: 'Potassium-based soap solution. Kills soft-bodied pests on contact. Organic-compliant.', ingredient: 'Potassium Soap', rate: '5L / Ha', emoji: '🫧', crop: 'Avocado, Vegetables' },
+      { id: 'p1', name: 'Spidor Max 300SC', category: 'c2', desc: 'Powerful acaricide-insecticide for mite and whitefly control in avocados, tomatoes and more.', ingredient: 'Spirodiclofen + Abamectin', rate: '10ml / 20L water', emoji: '🧪', crop: 'Avocado, Tomatoes' },
+      { id: 'p2', name: 'Agripest 75 EC Organic', category: 'c1', desc: 'Broad-spectrum biopesticide using refined croton megalo oil. Safe for the environment.', ingredient: 'Croton Megalo Oil', rate: '3ml / 1L water', emoji: '🌿', crop: 'All crops' },
+      { id: 'p3', name: 'Protec K', category: 'c2', desc: 'Potassium-based soap solution. Kills soft-bodied pests on contact. Organic-compliant.', ingredient: 'Potassium Soap', rate: '5L / Ha', emoji: '🫧', crop: 'Avocado, Vegetables' },
       { id: 'p4', name: 'CropShield Gold', category: 'c3', desc: 'Systemic fungicide for effective control of late blight, powdery mildew and downy mildew.', ingredient: 'Metalaxyl + Mancozeb', rate: '25g / 20L water', emoji: '🍄', crop: 'Tomatoes, Potatoes' },
-      { id: 'p5', name: 'GreenBoost Foliar', category: 'c4', desc: 'Complete foliar fertilizer with NPK + micronutrients. Enhances color, size and brix.', ingredient: 'NPK + Zinc + Boron', rate: '20ml / 20L water', emoji: '💧', crop: 'All crops' },
-      { id: 'p6', name: 'WeedOut Pro', category: 'c2', desc: 'Fast-acting systemic herbicide. Controls broadleaf weeds and grasses effectively.', ingredient: 'Glyphosate 480 g/L', rate: '100ml / 15L water', emoji: '🌾', crop: 'Maize, Tea, Coffee' },
+      { id: 'p5', name: 'GreenBoost Foliar', category: 'c5', desc: 'Complete foliar fertilizer with NPK + micronutrients. Enhances color, size and brix.', ingredient: 'NPK + Zinc + Boron', rate: '20ml / 20L water', emoji: '💧', crop: 'All crops' },
+      { id: 'p6', name: 'WeedOut Pro', category: 'c4', desc: 'Fast-acting systemic herbicide. Controls broadleaf weeds and grasses effectively.', ingredient: 'Glyphosate 480 g/L', rate: '100ml / 15L water', emoji: '🌾', crop: 'Maize, Tea, Coffee' },
     ],
     settings: {
       waNumber: '254702422297',
@@ -1244,6 +1351,126 @@ function getDefaultData() {
 }
 
 let store = getStore();
+
+// ══════════════════════════════════════════
+// GITHUB SYNC
+// ══════════════════════════════════════════
+let syncLogLines = [];
+
+function logSync(msg, type) {
+  const time = new Date().toLocaleTimeString();
+  syncLogLines.unshift(`[${time}] ${msg}`);
+  if (syncLogLines.length > 50) syncLogLines.pop();
+  const el = document.getElementById('sync-log');
+  if (el) el.innerHTML = syncLogLines.join('<br>');
+  setGHStatus(msg, type || 'idle');
+}
+
+function setGHStatus(msg, type) {
+  const el = document.getElementById('gh-status');
+  const txt = document.getElementById('gh-status-text');
+  if (!el || !txt) return;
+  el.className = 'sync-status ' + type;
+  txt.textContent = msg;
+  const dot = el.querySelector('.sync-dot');
+  if (dot) dot.className = 'sync-dot' + (type === 'saving' ? ' pulse' : '');
+}
+
+async function pushToGithub(data, silent) {
+  const cfg = getGHConfig();
+  if (!cfg.token || !cfg.owner || !cfg.repo) {
+    if (!silent) { logSync('GitHub not configured — go to GitHub Sync tab.', 'error'); alert('Please configure GitHub sync first (Admin → GitHub Sync tab).'); }
+    return false;
+  }
+  const payload = data || store;
+  const jsonContent = JSON.stringify(payload, null, 2);
+  const encoded = btoa(unescape(encodeURIComponent(jsonContent)));
+  const apiBase = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/data.json`;
+  setGHStatus('Syncing to GitHub…', 'saving');
+  try {
+    // Get current SHA if file exists
+    let sha = '';
+    try {
+      const getRes = await fetch(apiBase + `?ref=${cfg.branch}`, {
+        headers: { Authorization: `token ${cfg.token}`, Accept: 'application/vnd.github+json' }
+      });
+      if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
+    } catch(e) {}
+
+    const body = { message: 'Update site data via admin panel', content: encoded, branch: cfg.branch };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(apiBase, {
+      method: 'PUT',
+      headers: { Authorization: `token ${cfg.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (putRes.ok) {
+      logSync('Synced to GitHub successfully.', 'success');
+      setTimeout(() => setGHStatus('Up to date.', 'success'), 3000);
+      return true;
+    } else {
+      const err = await putRes.json();
+      logSync('GitHub error: ' + (err.message || putRes.status), 'error');
+      return false;
+    }
+  } catch(e) {
+    logSync('Network error: ' + e.message, 'error');
+    return false;
+  }
+}
+
+async function autoSync(data) {
+  const cfg = getGHConfig();
+  if (cfg.token && cfg.owner && cfg.repo) {
+    pushToGithub(data, true);
+  }
+}
+
+async function loadFromGithub() {
+  const cfg = getGHConfig();
+  if (!cfg.token || !cfg.owner || !cfg.repo) return;
+  try {
+    const apiBase = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/data.json`;
+    const res = await fetch(apiBase + `?ref=${cfg.branch}&t=${Date.now()}`, {
+      headers: { Authorization: `token ${cfg.token}`, Accept: 'application/vnd.github+json' }
+    });
+    if (res.ok) {
+      const d = await res.json();
+      const decoded = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+      const remote = JSON.parse(decoded);
+      store = remote;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+      renderCategories(); renderProducts();
+      logSync('Loaded latest data from GitHub.', 'success');
+    }
+  } catch(e) { /* silent fail on public load */ }
+}
+
+function saveGithubConfig() {
+  const cfg = {
+    token:  document.getElementById('gh-token').value.trim(),
+    owner:  document.getElementById('gh-owner').value.trim(),
+    repo:   document.getElementById('gh-repo').value.trim(),
+    branch: document.getElementById('gh-branch').value.trim() || 'main'
+  };
+  if (!cfg.token || !cfg.owner || !cfg.repo) { alert('Please fill in all GitHub fields.'); return; }
+  saveGHConfig(cfg);
+  logSync('GitHub config saved.', 'success');
+}
+
+async function testGithubConnection() {
+  const cfg = getGHConfig();
+  if (!cfg.token || !cfg.owner || !cfg.repo) { alert('Save the GitHub config first.'); return; }
+  setGHStatus('Testing connection…', 'saving');
+  try {
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}`, {
+      headers: { Authorization: `token ${cfg.token}`, Accept: 'application/vnd.github+json' }
+    });
+    if (res.ok) { logSync('Connection successful! Repo accessible.', 'success'); }
+    else { const e = await res.json(); logSync('Connection failed: ' + (e.message || res.status), 'error'); }
+  } catch(e) { logSync('Network error: ' + e.message, 'error'); }
+}
 
 // ══════════════════════════════════════════
 // RENDER PUBLIC SITE
@@ -1262,7 +1489,6 @@ function renderCategories() {
       <div class="sol-desc">${cat.desc}</div>
     </div>
   `).join('');
-  // re-observe
   document.querySelectorAll('.sol-card.reveal').forEach(el => revealObserver.observe(el));
 }
 
@@ -1279,10 +1505,9 @@ function renderProducts() {
         <div class="prod-name">${p.name}</div>
         <div class="prod-desc">${p.desc}</div>
         ${p.rate ? `<span class="prod-rate">Rate: ${p.rate}</span>` : ''}
-        <button class="prod-action">Request Quote →</button>
+        <button class="prod-action">Request Quote</button>
       </div>
-    </div>
-    `;
+    </div>`;
   }).join('');
   document.querySelectorAll('.prod-card.reveal').forEach(el => revealObserver.observe(el));
 }
@@ -1300,19 +1525,17 @@ function openProductModal(id) {
   document.getElementById('productModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-
 function closeModal() {
   document.getElementById('productModal').classList.remove('open');
   document.body.style.overflow = '';
 }
-
 function sendProductRequest() {
-  const name = document.getElementById('m-name').value.trim();
-  const phone = document.getElementById('m-phone').value.trim();
-  const email = document.getElementById('m-email').value.trim();
+  const name    = document.getElementById('m-name').value.trim();
+  const phone   = document.getElementById('m-phone').value.trim();
+  const email   = document.getElementById('m-email').value.trim();
   const country = document.getElementById('m-country').value.trim();
-  const qty = document.getElementById('m-qty').value.trim();
-  const notes = document.getElementById('m-notes').value.trim();
+  const qty     = document.getElementById('m-qty').value.trim();
+  const notes   = document.getElementById('m-notes').value.trim();
   const p = store.products.find(x => x.id === currentProductId);
   if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
   const msg = `Hello Get it Supplies!\n\nProduct Request:\n\nProduct: ${p ? p.name : 'Product'}\nName: ${name}\nPhone: ${phone}${email ? `\nEmail: ${email}` : ''}${country ? `\nCountry: ${country}` : ''}${qty ? `\nQuantity: ${qty}` : ''}${notes ? `\nDelivery / Notes: ${notes}` : ''}\n\nPlease send pricing and availability. Thank you!`;
@@ -1320,13 +1543,12 @@ function sendProductRequest() {
   window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
   closeModal();
 }
-
 function sendQuoteToWhatsApp() {
-  const name = document.getElementById('q-name').value.trim();
-  const phone = document.getElementById('q-phone').value.trim();
-  const crop = document.getElementById('q-crop').value;
+  const name     = document.getElementById('q-name').value.trim();
+  const phone    = document.getElementById('q-phone').value.trim();
+  const crop     = document.getElementById('q-crop').value;
   const category = document.getElementById('q-category').value;
-  const msg = document.getElementById('q-msg').value.trim();
+  const msg      = document.getElementById('q-msg').value.trim();
   if (!name) { alert('Please enter your name.'); return; }
   const text = `Hello Get it Supplies!\n\nQuote Request:\n\nName: ${name}\nPhone: ${phone || 'Not provided'}\nCrop: ${crop || 'Not specified'}\nNeed: ${category || 'Not specified'}\nDetails: ${msg || 'None'}\n\nPlease advise. Thank you!`;
   const wa = store.settings.waNumber || '254702422297';
@@ -1336,9 +1558,7 @@ function sendQuoteToWhatsApp() {
 // ══════════════════════════════════════════
 // ADMIN
 // ══════════════════════════════════════════
-function openAdmin() {
-  document.getElementById('admin-panel').classList.add('open');
-}
+function openAdmin() { document.getElementById('admin-panel').classList.add('open'); }
 function closeAdmin() {
   document.getElementById('admin-panel').classList.remove('open');
   renderCategories(); renderProducts();
@@ -1346,44 +1566,53 @@ function closeAdmin() {
 function adminLogin() {
   const u = document.getElementById('admin-user').value;
   const p = document.getElementById('admin-pass').value;
+  const creds = getCreds();
   const err = document.getElementById('login-err');
-  if (u === 'admin' && p === 'getit2026') {
+  if (u === creds.username && p === creds.password) {
     document.getElementById('admin-login-view').style.display = 'none';
     document.getElementById('admin-main-view').style.display = 'block';
-    renderAdminStats(); renderAdminProducts(); renderAdminCategories(); populateCategoryDropdown();
     err.style.display = 'none';
+    renderAdminStats(); renderAdminProducts(); renderAdminCategories(); populateCategoryDropdown();
+    loadGHConfigIntoForm();
+    loadFromGithub();
   } else {
     err.style.display = 'block';
   }
 }
-
 function switchTab(tab) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   event.target.classList.add('active');
 }
-
+function loadGHConfigIntoForm() {
+  const cfg = getGHConfig();
+  const f = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+  f('gh-token', cfg.token);
+  f('gh-owner', cfg.owner);
+  f('gh-repo', cfg.repo);
+  f('gh-branch', cfg.branch || 'main');
+  if (cfg.token) setGHStatus('Configured. Ready to sync.', 'success');
+}
 function renderAdminStats() {
   document.getElementById('adminStats').innerHTML = `
     <div class="admin-stat"><div class="admin-stat-num">${store.products.length}</div><div class="admin-stat-label">Products</div></div>
     <div class="admin-stat"><div class="admin-stat-num">${store.categories.length}</div><div class="admin-stat-label">Categories</div></div>
-    <div class="admin-stat"><div class="admin-stat-num">${store.settings.waNumber}</div><div class="admin-stat-label">WhatsApp</div></div>
-    <div class="admin-stat"><div class="admin-stat-num">Live</div><div class="admin-stat-label">Site Status</div></div>
+    <div class="admin-stat"><div class="admin-stat-num">${store.settings.waNumber || '—'}</div><div class="admin-stat-label">WhatsApp</div></div>
+    <div class="admin-stat"><div class="admin-stat-num" style="color:var(--lime);">Live</div><div class="admin-stat-label">Site Status</div></div>
   `;
 }
-
 function populateCategoryDropdown() {
   const sel = document.getElementById('pf-cat');
+  if (!sel) return;
   sel.innerHTML = store.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
-
 function renderAdminProducts() {
   const tbody = document.getElementById('productsTableBody');
   tbody.innerHTML = store.products.map(p => {
     const cat = getCategoryById(p.category);
     return `<tr>
-      <td><strong>${p.emoji} ${p.name}</strong></td>
+      <td><strong>${p.emoji || ''} ${p.name}</strong></td>
       <td><span class="prod-badge">${cat.name || ''}</span></td>
       <td>${p.rate || '—'}</td>
       <td>${p.crop || '—'}</td>
@@ -1394,11 +1623,10 @@ function renderAdminProducts() {
     </tr>`;
   }).join('');
 }
-
 function renderAdminCategories() {
   const tbody = document.getElementById('categoriesTableBody');
   tbody.innerHTML = store.categories.map(c => `<tr>
-    <td style="font-size:24px">${c.emoji}</td>
+    <td style="font-size:22px">${c.emoji}</td>
     <td><strong>${c.name}</strong></td>
     <td style="color:var(--muted);font-size:13px">${c.desc}</td>
     <td><div class="admin-actions">
@@ -1407,10 +1635,9 @@ function renderAdminCategories() {
     </div></td>
   </tr>`).join('');
 }
-
 function uid() { return 'id_' + Date.now() + Math.random().toString(36).substr(2,5); }
 
-// -- PRODUCTS CRUD --
+// ── Products CRUD ──
 function saveProduct() {
   const editId = document.getElementById('pf-edit-id').value;
   const prod = {
@@ -1424,17 +1651,12 @@ function saveProduct() {
     crop: document.getElementById('pf-crop').value.trim(),
   };
   if (!prod.name) { alert('Product name required.'); return; }
-  if (editId) {
-    const idx = store.products.findIndex(p => p.id === editId);
-    if (idx > -1) store.products[idx] = prod;
-  } else {
-    store.products.push(prod);
-  }
+  if (editId) { const i = store.products.findIndex(p => p.id === editId); if (i > -1) store.products[i] = prod; }
+  else { store.products.push(prod); }
   saveStore(store);
   cancelProductEdit();
   renderAdminProducts(); renderAdminStats();
 }
-
 function editProduct(id) {
   const p = store.products.find(x => x.id === id);
   if (!p) return;
@@ -1449,13 +1671,11 @@ function editProduct(id) {
   document.getElementById('product-form-title').textContent = 'Edit Product';
   document.getElementById('tab-products').scrollIntoView({ behavior: 'smooth' });
 }
-
 function cancelProductEdit() {
-  ['pf-name','pf-desc','pf-ingredient','pf-rate','pf-emoji','pf-crop'].forEach(id => document.getElementById(id).value = '');
+  ['pf-name','pf-desc','pf-ingredient','pf-rate','pf-emoji','pf-crop'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('pf-edit-id').value = '';
   document.getElementById('product-form-title').textContent = 'Add New Product';
 }
-
 function deleteProduct(id) {
   if (!confirm('Delete this product?')) return;
   store.products = store.products.filter(p => p.id !== id);
@@ -1463,27 +1683,17 @@ function deleteProduct(id) {
   renderAdminProducts(); renderAdminStats();
 }
 
-// -- CATEGORIES CRUD --
+// ── Categories CRUD ──
 function saveCategory() {
   const editId = document.getElementById('cf-edit-id').value;
-  const cat = {
-    id: editId || uid(),
-    name: document.getElementById('cf-name').value.trim(),
-    emoji: document.getElementById('cf-emoji').value.trim() || '🌿',
-    desc: document.getElementById('cf-desc').value.trim(),
-  };
+  const cat = { id: editId || uid(), name: document.getElementById('cf-name').value.trim(), emoji: document.getElementById('cf-emoji').value.trim() || '🌿', desc: document.getElementById('cf-desc').value.trim() };
   if (!cat.name) { alert('Category name required.'); return; }
-  if (editId) {
-    const idx = store.categories.findIndex(c => c.id === editId);
-    if (idx > -1) store.categories[idx] = cat;
-  } else {
-    store.categories.push(cat);
-  }
+  if (editId) { const i = store.categories.findIndex(c => c.id === editId); if (i > -1) store.categories[i] = cat; }
+  else { store.categories.push(cat); }
   saveStore(store);
   cancelCategoryEdit();
   renderAdminCategories(); populateCategoryDropdown(); renderAdminStats();
 }
-
 function editCategory(id) {
   const c = store.categories.find(x => x.id === id);
   if (!c) return;
@@ -1493,43 +1703,63 @@ function editCategory(id) {
   document.getElementById('cf-edit-id').value = id;
   document.getElementById('cat-form-title').textContent = 'Edit Category';
 }
-
 function cancelCategoryEdit() {
-  document.getElementById('cf-name').value = '';
-  document.getElementById('cf-emoji').value = '';
-  document.getElementById('cf-desc').value = '';
+  ['cf-name','cf-emoji','cf-desc'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('cf-edit-id').value = '';
   document.getElementById('cat-form-title').textContent = 'Add Category';
 }
-
 function deleteCategory(id) {
-  if (!confirm('Delete this category? Products in it will keep a reference.')) return;
+  if (!confirm('Delete this category?')) return;
   store.categories = store.categories.filter(c => c.id !== id);
   saveStore(store);
   renderAdminCategories(); populateCategoryDropdown(); renderAdminStats();
 }
 
+// ── Settings ──
 function saveSettings() {
   store.settings.waNumber = document.getElementById('s-wa').value.trim();
-  store.settings.email = document.getElementById('s-email').value.trim();
-  store.settings.tagline = document.getElementById('s-tagline').value.trim();
-  store.settings.subtext = document.getElementById('s-subtext').value.trim();
+  store.settings.email    = document.getElementById('s-email').value.trim();
+  store.settings.tagline  = document.getElementById('s-tagline').value.trim();
+  store.settings.subtext  = document.getElementById('s-subtext').value.trim();
   saveStore(store);
   const s = document.getElementById('settings-saved');
-  s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2000);
+  if (s) { s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2500); }
+}
+
+// ── Credentials ──
+function changeCredentials() {
+  const current = document.getElementById('cred-current').value;
+  const newUser = document.getElementById('cred-user').value.trim();
+  const newPass = document.getElementById('cred-new').value;
+  const confirm = document.getElementById('cred-confirm').value;
+  const msg = document.getElementById('cred-msg');
+
+  function showMsg(text, type) {
+    msg.textContent = text; msg.style.display = 'block';
+    msg.className = 'admin-msg ' + type;
+    setTimeout(() => { msg.style.display = 'none'; }, 3500);
+  }
+
+  const creds = getCreds();
+  if (current !== creds.password) { showMsg('Current password is incorrect.', 'error'); return; }
+  if (!newUser) { showMsg('Username cannot be empty.', 'error'); return; }
+  if (newPass.length < 8) { showMsg('New password must be at least 8 characters.', 'error'); return; }
+  if (newPass !== confirm) { showMsg('Passwords do not match.', 'error'); return; }
+
+  saveCreds({ username: newUser, password: newPass });
+  showMsg('Credentials updated successfully!', 'success');
+  ['cred-current','cred-user','cred-new','cred-confirm'].forEach(id => { document.getElementById(id).value = ''; });
 }
 
 // ══════════════════════════════════════════
 // NAV + UI
 // ══════════════════════════════════════════
 function toggleMobileMenu() {
-  const menu = document.getElementById('mobileMenu');
-  menu.classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
 }
-
 window.addEventListener('scroll', () => {
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
-});
+}, { passive: true });
 
 // SCROLL REVEAL
 const revealObserver = new IntersectionObserver(entries => {
@@ -1554,16 +1784,7 @@ document.querySelectorAll('a, button, .prod-card, .sol-card').forEach(el => {
   el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
 });
 
-// LOADER
-function dismissLoader() {
-  const l = document.getElementById('loader');
-  if (l) l.classList.add('done');
-}
-if (document.readyState === 'complete') setTimeout(dismissLoader, 500);
-else window.addEventListener('load', () => setTimeout(dismissLoader, 500));
-setTimeout(dismissLoader, 2000);
-
-// BOTTOM NAV active state
+// BOTTOM NAV
 const bnavSections = [
   { id: 'bn-home', section: 'hero' },
   { id: 'bn-solutions', section: 'solutions' },
@@ -1583,12 +1804,13 @@ function updateBottomNav() {
 }
 window.addEventListener('scroll', updateBottomNav, { passive: true });
 
-// LOADER - dismiss immediately, no waiting
+// LOADER — dismiss as soon as script runs
 document.getElementById('loader').classList.add('done');
 
 // INIT
 renderCategories();
 renderProducts();
+
 </script>
 </body>
 </html>
